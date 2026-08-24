@@ -3,48 +3,51 @@ const DEMO_DATA=GameRules.DEMO_DATA;
 const BACKGROUND_BODY=`
   <div class="story-lead">
     <p>千禧年代，老居民楼、小卖部、中学、派出所和大排档挤在同一片城区里。你只是一个普通高中生——直到挚友在星期六死去。</p>
-    <p>强烈的情绪让你在下一个瞬间回到星期日。挚友还活着，城市也像什么都没有发生过；只有你记得那场惨剧。</p>
+    <p>强烈的情绪让你回到星期日。挚友还活着，城市也像什么都没有发生过；只有你记得那场惨剧。</p>
   </div>
   <blockquote>如果每一次案件里死的都是挚友……这不是爱是什么？但在第1000种死法出现以前，还是先把人救下来吧。</blockquote>
   <h3>一周，就是一次推理</h3>
   <div class="story-cycle">
-    <div><b>周日</b><span>带着案件和线索回到起点</span></div>
-    <div><b>周一—周五</b><span>观察特殊事件，推理建筑之间的隐藏规则</span></div>
-    <div><b>周六</b><span>城市结算；危险过高时，最终案件发生</span></div>
+    <div><b>第一次轮回</b><span>让城市自然运行，观察周一至周五的特殊事件与周六案件。</span></div>
+    <div><b>第二次星期日</b><span>保留线索，使用 3 点 SAN 改变三栋建筑的位置。</span></div>
+    <div><b>再次结算</b><span>犯罪预值峰值低于 7，最终案件就不会发生。</span></div>
   </div>
   <h3>你改变的不是凶手，是城市</h3>
-  <p>学校是否离住宅太远？大排档是否离居民楼太近？派出所能否覆盖危险区域？你要从日历、小报、公告和居民口述中读出空间规律，再把城市调整成让惨剧没有机会发生的样子。</p>
+  <p>学校是否离住宅太远？大排档是否离居民楼太近？派出所能否及时赶到？从日历、小报和居民口述中读出规律，让惨剧失去发生的条件。</p>
   <div class="power-list">
     <div><b>星期日的轮回</b><span>惨剧发生后返回星期日，保留记忆、案件信息与线索。</span></div>
-    <div><b>乾坤挪移</b><span>消耗 1 点 SAN 移动一栋建筑；正式新手关计划为 SAN 3/3。</span></div>
-    <div><b>觉醒值</b><span>通过阻止案件、发现规律和推进剧情获得，用来解锁城区拓展、道路建设等能力。</span></div>
-  </div>
-  <div class="demo-mission">
-    <b>当前 Demo｜先验证第一条城市规律</b>
-    <p>xx中学与居民楼的初始距离为 6，会触发「求学路漫漫」。移动建筑、缩短距离并重新演算，让挚友今天平安到校。</p>
-    <small>本版暂不扣除 SAN；完整的五日观察、周六案件与线索收集将在后续版本接入。</small>
+    <div><b>乾坤挪移</b><span>每移动一栋建筑消耗 1 点 SAN。本关只有学校、小卖部和大排档可以移动。</span></div>
+    <div><b>觉醒值</b><span>完成案件后获得，用来解锁城区拓展、道路建设等后续能力。</span></div>
   </div>`;
 
 const $=id=>document.getElementById(id);
+const emptyHeatmap=()=>Array.from({length:DEMO_DATA.map.height},()=>Array(DEMO_DATA.map.width).fill(0));
 const state={
   buildings:structuredClone(DEMO_DATA.buildings),
-  selected:"residential_01",
-  heatmap:Array.from({length:8},()=>Array(8).fill(0)),
-  eventActive:false,
-  simulationCount:0
+  selected:"shop_01",
+  heatmap:emptyHeatmap(),
+  phase:"observe",
+  san:0,
+  lastResult:null,
+  knownResult:null,
+  simulationCount:0,
+  moves:[],
+  modalAction:null
 };
 
 function building(id){return state.buildings.find(item=>item.id===id)}
-function byType(type){return state.buildings.find(item=>item.type===type)}
 function fmt(value){return value>0?`+${value}`:String(value)}
+function number(value){return Number.isInteger(value)?value:value.toFixed(1)}
 
 function renderCells(){
-  $("cells").innerHTML="";
-  for(let y=0;y<8;y++)for(let x=0;x<8;x++){
+  const root=$("cells");root.innerHTML="";
+  for(let y=0;y<DEMO_DATA.map.height;y++)for(let x=0;x<DEMO_DATA.map.width;x++){
+    const road=DEMO_DATA.map.road_rows.includes(y);
     const cell=document.createElement("button");
-    cell.className="cell";cell.type="button";cell.title=`(${x},${y})`;
-    cell.addEventListener("click",()=>placeSelected(x,y));
-    $("cells").appendChild(cell);
+    cell.className=`cell ${road?"road-cell":""}`;cell.type="button";cell.title=road?`道路 (${x+1},${y+1})`:`(${x+1},${y+1})`;
+    cell.disabled=road;
+    if(!road)cell.addEventListener("click",()=>placeSelected(x,y));
+    root.appendChild(cell);
   }
 }
 
@@ -52,122 +55,149 @@ function renderBuildings(){
   const root=$("building-layer");root.innerHTML="";
   state.buildings.forEach(item=>{
     const el=document.createElement("button");
+    const locked=state.phase!=="intervene"||!item.movable;
     el.type="button";
-    el.className=`building ${item.type} ${state.selected===item.id?"selected":""}`;
+    el.className=`building ${item.type} ${item.id} ${state.selected===item.id?"selected":""} ${locked?"locked":""}`;
     el.style.gridColumn=`${item.position.x+1} / span ${item.size.width}`;
     el.style.gridRow=`${item.position.y+1} / span ${item.size.height}`;
-    el.innerHTML=`<div><span>${item.icon}</span><strong>${item.name}</strong></div>`;
-    el.addEventListener("click",e=>{e.stopPropagation();selectBuilding(item.id)});
+    el.innerHTML=`<div><span>${item.icon}</span><strong>${item.name}</strong>${locked?"<small>🔒</small>":""}</div>`;
+    el.addEventListener("click",event=>{event.stopPropagation();selectBuilding(item.id)});
     root.appendChild(el);
   });
 }
 
 function renderInfluence(){
-  const school=byType("school"),box=document.createElement("div");
-  $("influence").innerHTML="";
+  const root=$("influence");root.innerHTML="";
+  const item=building(state.selected);if(!item)return;
+  const area=GameRules.coverageRect(item),box=document.createElement("div");
   box.className="influence-box";
-  box.style.gridColumn=`${school.position.x+1} / span ${Math.min(school.influence_area.width,8-school.position.x)}`;
-  box.style.gridRow=`${school.position.y+1} / span ${Math.min(school.influence_area.height,8-school.position.y)}`;
-  $("influence").appendChild(box);
+  box.style.gridColumn=`${area.x+1} / span ${area.width}`;
+  box.style.gridRow=`${area.y+1} / span ${area.height}`;
+  root.appendChild(box);
 }
 
 function renderHeatmap(){
   const root=$("heatmap");root.innerHTML="";
   state.heatmap.flat().forEach(value=>{
     const cell=document.createElement("div");
-    cell.className=`heat-cell ${value>=DEMO_DATA.event_threshold?"hot":""}`;
+    cell.className=`heat-cell ${value>=DEMO_DATA.event_threshold?"hot":value>=4?"warm":""}`;
     if(value)cell.textContent=value;
     root.appendChild(cell);
   });
   root.classList.toggle("hidden",!$("heat-toggle").checked);
-  $("peak").textContent=Math.max(...state.heatmap.flat());
-}
-
-function renderRelation(){
-  const a=byType("school"),b=byType("residential");
-  const center=item=>({x:item.position.x+item.size.width/2,y:item.position.y+item.size.height/2});
-  const ca=center(a),cb=center(b),line=$("relation-line");
-  line.setAttribute("x1",ca.x);line.setAttribute("y1",ca.y);line.setAttribute("x2",cb.x);line.setAttribute("y2",cb.y);
-  const d=buildingDistance(a,b),unsafe=d>=DEMO_DATA.event.condition.distance_gte;
-  $("distance").textContent=Number.isInteger(d)?d:d.toFixed(1);
-  $("condition-text").textContent=unsafe?"当前布局将触发“求学路漫漫”。":"当前布局安全：学生通学距离未达到事件阈值。";
-  $("condition-text").classList.toggle("safe",!unsafe);
 }
 
 function renderStats(){
-  const totals={economy:0,security:0,livelihood:0,population:0};
-  state.buildings.forEach(item=>Object.entries(item.attributes).forEach(([key,value])=>totals[key]+=value));
-  if(state.eventActive)totals.livelihood+=DEMO_DATA.event.effect.livelihood;
+  const current=GameRules.evaluate(state.buildings);
+  const totals=state.lastResult?state.lastResult.totals:current.base_totals;
   Object.entries(totals).forEach(([key,value])=>$(key).textContent=fmt(value));
 }
 
 function renderPicker(){
-  document.querySelectorAll("[data-building]").forEach(button=>{
-    const item=byType(button.dataset.building);
-    button.classList.toggle("selected",item.id===state.selected);
-  });
-  $("mode-hint").textContent=`已选择：${building(state.selected).name}，点击网格移动`;
+  document.querySelectorAll("[data-building-id]").forEach(button=>button.classList.toggle("selected",button.dataset.buildingId===state.selected));
 }
 
-function render(){renderBuildings();renderInfluence();renderHeatmap();renderRelation();renderStats();renderPicker()}
-
-function selectBuilding(id){state.selected=id;renderPicker();renderBuildings()}
-
-function placeSelected(x,y){
-  const item=building(state.selected);
-  if(x+item.size.width>8||y+item.size.height>8){toastLog(`${item.name} 在 (${x},${y}) 会超出地图。`);return}
-  const collision=state.buildings.some(other=>other.id!==item.id&&rectsOverlap({x,y,w:item.size.width,h:item.size.height},{x:other.position.x,y:other.position.y,w:other.size.width,h:other.size.height}));
-  if(collision){toastLog(`${item.name} 不能与另一建筑重叠。`);return}
-  item.position={x,y};clearSimulation();
-  toastLog(`已将 ${item.name} 移至 (${x},${y})。`);render();
-}
-
-function rectsOverlap(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
-
-const buildingDistance=GameRules.buildingDistance;
-
-function simulate(){
-  state.simulationCount++;
-  const result=GameRules.evaluate(state.buildings);
-  state.heatmap=result.heatmap;
-  const school=byType("school"),residential=byType("residential"),distance=result.distance;
-  const active=result.active;
-  state.eventActive=active;
-  addLog(`第 ${state.simulationCount} 次演算：创建 8×8 grid。`);
-  addLog(`读取 ${school.id} (${school.position.x},${school.position.y}) 与 ${residential.id} (${residential.position.x},${residential.position.y})。`);
-  addLog(`建筑占地边界最近距离 = ${Number.isInteger(distance)?distance:distance.toFixed(1)}。`);
-  if(active){
-    addLog(`距离 ≥ 6，触发 ${DEMO_DATA.event.id}。`);
-    addLog(`中学 5×5 影响区写入 crime_value +2。`);
-    addLog(`heatmap_max = ${Math.max(...state.heatmap.flat())}，达到阈值 ${DEMO_DATA.event_threshold}。`);
-    render();
-    showModal("犯罪事件触发",DEMO_DATA.event.name,`<p>住宅区离学校过远。漫长且缺少照看的通学路线，正在成为犯罪滋生区。</p><div class="event-value"><div>🔥 犯罪值 <b class="bad">+${DEMO_DATA.event.effect.crime_value}</b></div><div>🌿 民生 <b class="bad">${DEMO_DATA.event.effect.livelihood}</b></div></div><ul><li>建筑距离：${distance}</li><li>事件阈值：≥ 6</li><li>热力峰值：2 / 2</li></ul><p>移动居民楼或学校，缩短最近距离，再次运行演算。</p>`,`继续调整布局`);
+function renderStatus(){
+  const item=building(state.selected),peak=Math.max(...state.heatmap.flat());
+  $("peak").textContent=peak;
+  if(state.phase==="observe"){
+    $("phase-title").textContent="第一次轮回：只能观察";$("phase-badge").textContent="周日";$("san").textContent="未觉醒";
+    $("event-count").textContent=state.lastResult?`${state.lastResult.events.length} 起`:"待观察";
+    $("mode-hint").textContent="第一次轮回无法移动建筑";
+    $("condition-text").textContent=state.lastResult?`五日内发生 ${state.lastResult.events.length} 起特殊事件，犯罪预值峰值达到 ${state.lastResult.peak}。`:"建筑和道路已经固定。先让城市自然运行一周，观察它为什么走向惨剧。";
+    $("simulate-label").textContent="推进至周六结算";$("simulate-hint").textContent="观察五日事件 → 生成犯罪预值 → 触发最终案件";
   }else{
-    addLog(`距离 < 6，event_school_far 未触发。`);
-    addLog(`heatmap_max = 0，未达到阈值 ${DEMO_DATA.event_threshold}。`);
-    render();
-    showModal("规划成功","挚友今天平安到校",`<p>学校与住宅区的空间关系已经改善，“求学路漫漫”没有发生。</p><div class="event-value"><div>🔥 犯罪峰值 <b class="good">0</b></div><div>🌿 民生惩罚 <b class="good">0</b></div></div><p>本关验证完成：建筑放置 → 距离判断 → 事件开关 → 热力图 → 峰值提示。</p>`,`再试一种布局`);
+    $("phase-title").textContent="第二次星期日：改变城市";$("phase-badge").textContent="剩余5天";$("san").textContent=`${state.san} / ${DEMO_DATA.max_san}`;
+    const eventTotal=state.lastResult?state.lastResult.events.length:state.knownResult?.events.length||0;
+    $("event-count").textContent=state.lastResult?`${eventTotal} 起`:`已知 ${eventTotal} 起`;
+    $("mode-hint").textContent=item.movable?`已选择：${item.name}，点击空地移动`:`${item.name}：本关固定`;
+    if(state.lastResult){
+      $("condition-text").textContent=state.lastResult.dangerous?`仍有 ${eventTotal} 起特殊事件，峰值 ${state.lastResult.peak} 仍达到案件阈值。`:`特殊事件已消失，峰值 ${state.lastResult.peak} 低于案件阈值。`;
+    }else{
+      $("condition-text").textContent="上轮留下4条线索。空间很挤：先给大建筑腾出位置，再用完3次移动。";
+    }
+    $("simulate-label").textContent="重新运行这一周";$("simulate-hint").textContent="验证新布局 → 重新计算犯罪预值 → 周六结算";
   }
 }
 
-function clearSimulation(){state.eventActive=false;state.heatmap=Array.from({length:8},()=>Array(8).fill(0))}
+function render(){renderBuildings();renderInfluence();renderHeatmap();renderStats();renderPicker();renderStatus()}
+
+function selectBuilding(id){
+  state.selected=id;const item=building(id);
+  if(state.phase==="intervene"&&!item.movable)addLog(`${item.name} 在本关属于固定建筑。`);
+  renderPicker();renderBuildings();renderInfluence();renderStatus();
+}
+
+function placeSelected(x,y){
+  const item=building(state.selected);
+  if(state.phase!=="intervene"){addLog("第一次轮回只能观察，暂时无法改变城市。");return}
+  if(!item.movable){addLog(`${item.name} 在新手关中无法移动。`);return}
+  if(state.san<=0){addLog("SAN 已耗尽，请先进行周六结算。");return}
+  if(item.position.x===x&&item.position.y===y){addLog(`${item.name} 已经在这里，不消耗 SAN。`);return}
+  const candidate={...item,position:{x,y}};
+  if(x+item.size.width>DEMO_DATA.map.width||y+item.size.height>DEMO_DATA.map.height){addLog(`${item.name} 在 (${x+1},${y+1}) 会超出地图。`);return}
+  if(GameRules.touchesRoad(candidate)){addLog(`${item.name} 不能压住固定道路。`);return}
+  if(state.buildings.some(other=>other.id!==item.id&&GameRules.rectsOverlap(candidate,other))){addLog(`${item.name} 不能与另一栋建筑重叠。`);return}
+  const from={...item.position};item.position={x,y};state.san--;state.moves.push({id:item.id,from,to:{x,y}});
+  state.lastResult=null;state.heatmap=emptyHeatmap();
+  addLog(`乾坤挪移：${item.name} 从 (${from.x+1},${from.y+1}) 移至 (${x+1},${y+1})，SAN -1。`);render();
+}
+
+function eventCards(result){
+  return `<div class="event-list">${result.events.map(event=>`<div><small>${event.day}</small><b>【${event.name}】</b><p>${event.clue}</p><span>犯罪预值 +${event.crime_value}${event.livelihood?` · 民生 ${event.livelihood}`:""}</span></div>`).join("")}</div>`;
+}
+
+function resultSummary(result){
+  const d=result.distances;
+  return `<div class="calculation-grid"><div><span>学校 ↔ 住宅</span><b>${number(d.school_to_home)}</b></div><div><span>小卖部 ↔ 住宅</span><b>${number(d.shop_to_home)}</b></div><div><span>大排档 ↔ 住宅</span><b>${number(d.diner_to_home)}</b></div><div><span>大排档 ↔ 派出所</span><b>${number(d.diner_to_police)}</b></div></div>`;
+}
+
+function simulate(){
+  const result=GameRules.evaluate(state.buildings);state.simulationCount++;state.lastResult=result;state.heatmap=result.heatmap;
+  addLog(`周六结算：${result.events.length} 起特殊事件，犯罪预值峰值 ${result.peak} / ${result.threshold}。`);
+  result.events.forEach(event=>addLog(`${event.day}【${event.name}】犯罪预值 +${event.crime_value}。`));render();
+  if(state.phase==="observe"){
+    showModal("周六 · 最终案件","最初的误杀",`<p>晚自习结束后，挚友独自走完最后一段回家路。等警方赶到时，这一周积累的危险已经无法挽回。</p>${eventCards(result)}<div class="threshold-result"><span>区域最高犯罪预值</span><strong>${result.peak}</strong><i>案件阈值 ${result.threshold}</i></div>${resultSummary(result)}<p>四起事件不是彼此独立的偶然。它们都在提示建筑之间错误的空间关系。</p>`,`回到星期日`,()=>beginSecondLoop(result));
+  }else if(result.dangerous){
+    const noSan=state.san===0;
+    showModal("周六 · 再次结算",noSan?"惨剧再次发生":"城市仍在走向惨剧",`${eventCards(result)}<div class="threshold-result"><span>区域最高犯罪预值</span><strong>${result.peak}</strong><i>案件阈值 ${result.threshold}</i></div>${resultSummary(result)}<p>${noSan?"3点 SAN 已经耗尽。带着这次试错的记忆，再回到星期日。":"还有 SAN 可以使用。继续根据消失或仍然出现的事件调整布局。"}</p>`,noSan?"再次轮回":"继续调整",noSan?resetSecondLoop:null);
+  }else{
+    showModal("周六 · 安全结算","这一周，挚友平安",`<p>城市里仍有日常风险，但没有任何特殊事件把风险推向惨剧。你第一次真正改变了结局。</p><div class="threshold-result safe-result"><span>区域最高犯罪预值</span><strong>${result.peak}</strong><i>低于案件阈值 ${result.threshold}</i></div>${resultSummary(result)}<ul><li>初始峰值：14</li><li>当前峰值：${result.peak}</li><li>三次移动全部有效</li><li>获得觉醒值：+1</li></ul>`,`完成第一关`);
+  }
+}
+
+function beginSecondLoop(initialResult){
+  state.phase="intervene";state.san=DEMO_DATA.max_san;state.buildings=structuredClone(DEMO_DATA.buildings);state.selected="shop_01";
+  state.knownResult=initialResult;state.lastResult=null;state.heatmap=structuredClone(initialResult.heatmap);state.moves=[];
+  $("log").innerHTML="<li>时间回到星期日。你保留了4条事件线索，并觉醒了“乾坤挪移”。</li><li>本关 SAN 3/3；居民楼、派出所和道路固定。</li>";render();
+}
+
+function resetSecondLoop(){
+  state.phase="intervene";state.san=DEMO_DATA.max_san;state.buildings=structuredClone(DEMO_DATA.buildings);state.selected="shop_01";
+  state.lastResult=null;state.heatmap=state.knownResult?structuredClone(state.knownResult.heatmap):emptyHeatmap();state.moves=[];
+  $("log").innerHTML="<li>再次回到星期日。SAN 恢复为 3/3。</li>";render();
+}
 
 function reset(){
-  state.buildings=structuredClone(DEMO_DATA.buildings);state.selected="residential_01";state.simulationCount=0;clearSimulation();
-  $("log").innerHTML="<li>地图已重置为文档指定初始状态。</li>";render();
+  state.phase="observe";state.san=0;state.buildings=structuredClone(DEMO_DATA.buildings);state.selected="shop_01";state.lastResult=null;state.knownResult=null;
+  state.heatmap=emptyHeatmap();state.simulationCount=0;state.moves=[];
+  $("log").innerHTML="<li>2000年6月11日，星期日。距离好友遇害还有5天。</li>";render();showTutorialIntro();
 }
 
 function addLog(text){const li=document.createElement("li");li.textContent=text;$("log").prepend(li)}
-function toastLog(text){addLog(text)}
-function showModal(tag,title,body,button){const modal=$("modal");$("modal-tag").textContent=tag;$("modal-title").textContent=title;$("modal-body").innerHTML=body;$("modal-close").textContent=button;modal.showModal();modal.scrollTop=0}
-function showBackground(){showModal("世界背景 · 千禧年代老城区","又是星期日。挚友还活着。",BACKGROUND_BODY,"进入本轮周目")}
+function showModal(tag,title,body,button,action=null){
+  const modal=$("modal");state.modalAction=action;$("modal-tag").textContent=tag;$("modal-title").textContent=title;$("modal-body").innerHTML=body;$("modal-close").textContent=button;modal.showModal();modal.scrollTop=0;
+}
+function showTutorialIntro(){
+  showModal("第一关 · 第一次轮回","距离好友遇害还有5天",`<p>星期日。好友还活着，但你不知道惨剧为什么会发生。</p><p>这一次先不要试图改变任何东西。让老城区自然运行，阅读五日事件，再查看周六犯罪预值如何累积。</p><div class="demo-mission"><b>初始地图规则</b><p>8×8 网格中有六栋建筑；第4、5行是固定道路。第一次轮回所有建筑均不可移动。</p><small>边相接距离为 1，角相接距离为 1.5。规则藏在事件文本里，不会直接给出答案。</small></div>`,`开始观察`);
+}
+function showBackground(){showModal("世界背景 · 千禧年代老城区","又是星期日。挚友还活着。",BACKGROUND_BODY,"返回游戏")}
 
-document.querySelectorAll("[data-building]").forEach(button=>button.addEventListener("click",()=>selectBuilding(byType(button.dataset.building).id)));
+document.querySelectorAll("[data-building-id]").forEach(button=>button.addEventListener("click",()=>selectBuilding(button.dataset.buildingId)));
 $("simulate").addEventListener("click",simulate);
 $("story").addEventListener("click",showBackground);
 $("reset").addEventListener("click",reset);
 $("heat-toggle").addEventListener("change",renderHeatmap);
-$("modal-close").addEventListener("click",()=>$("modal").close());
+$("modal-close").addEventListener("click",()=>{const action=state.modalAction;state.modalAction=null;$("modal").close();if(action)action()});
 
-renderCells();render();
-showBackground();
+renderCells();render();showTutorialIntro();

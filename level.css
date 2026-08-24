@@ -1,0 +1,278 @@
+.road-cell,
+.road-cell:disabled {
+  border-color: #655f53;
+  background:
+    linear-gradient(90deg, transparent 46%, #d1b36c 47% 53%, transparent 54%) center / 32px 3px repeat-x,
+    repeating-linear-gradient(135deg, #4a4a48 0 8px, #434341 8px 16px);
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.building.shop {
+  border-color: #8ac48f;
+  background: linear-gradient(145deg, #3e7650, #254632);
+}
+
+.building.police {
+  border-color: #8ebce0;
+  background: linear-gradient(145deg, #416e91, #263f5a);
+}
+
+.building.diner {
+  border-color: #dc8e60;
+  background: linear-gradient(145deg, #8c4f39, #502e29);
+}
+
+.building.locked {
+  filter: saturate(.7);
+}
+
+.building.locked:not(.selected) {
+  opacity: .88;
+}
+
+.building div {
+  max-width: 100%;
+}
+
+.building span {
+  font-size: clamp(17px, 5vw, 28px);
+}
+
+.building small {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  font-size: 7px;
+}
+
+.building.residential_02 span {
+  font-size: 17px;
+}
+
+.building.residential_02 strong {
+  margin: 0;
+  font-size: 7px;
+}
+
+.building.residential_02 small {
+  display: none;
+}
+
+.heat-cell.warm {
+  background: rgba(215, 142, 52, .46);
+  color: #fff1c7;
+}
+
+.road-dot {
+  background: #666157;
+}
+
+.warm-dot {
+  background: #d78e34;
+}
+
+.level-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.level-heading small,
+.level-heading strong {
+  display: block;
+}
+
+.level-heading small {
+  color: var(--gold);
+  font-size: 8px;
+  letter-spacing: .1em;
+}
+
+.level-heading strong {
+  margin-top: 2px;
+  font-size: 13px;
+}
+
+#phase-badge {
+  flex: 0 0 auto;
+  padding: 5px 8px;
+  border: 1px solid #6f5b39;
+  border-radius: 999px;
+  background: #261f19;
+  color: #f1cc84;
+  font-size: 8px;
+}
+
+.resource-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.resource-row > div {
+  padding: 8px;
+  border-radius: 9px;
+  background: #101924;
+}
+
+.resource-row span,
+.resource-row strong {
+  display: block;
+}
+
+.resource-row span {
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.resource-row strong {
+  margin-top: 3px;
+  font-size: 12px;
+}
+
+.building-picker {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.building-picker button {
+  min-width: 0;
+}
+
+.building-picker small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.condition-text {
+  margin: 8px 0;
+  padding: 8px 10px;
+  border-left: 3px solid var(--gold);
+  border-radius: 6px;
+  background: #211f1b;
+  color: #d7cdbb;
+  font-size: 9px;
+  line-height: 1.55;
+}
+
+.event-list {
+  display: grid;
+  gap: 7px;
+  margin: 12px 0;
+}
+
+.event-list > div {
+  padding: 10px 11px;
+  border: 1px solid #493d3e;
+  border-radius: 10px;
+  background: #171b22;
+}
+
+.event-list small,
+.event-list b,
+.event-list span {
+  display: block;
+}
+
+.event-list small {
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.event-list b {
+  margin-top: 2px;
+  color: #f0c58e;
+  font-size: 12px;
+}
+
+.event-list p {
+  margin: 5px 0 !important;
+  font-size: 11px !important;
+}
+
+.event-list span {
+  color: #e87d72;
+  font-size: 9px;
+}
+
+.threshold-result {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  margin: 13px 0;
+  padding: 12px;
+  border: 1px solid #7e3e3b;
+  border-radius: 11px;
+  background: #2b191b;
+}
+
+.threshold-result span,
+.threshold-result i {
+  color: #d9b9b6;
+  font-size: 9px;
+  font-style: normal;
+}
+
+.threshold-result strong {
+  grid-row: 1 / 3;
+  grid-column: 2;
+  color: #ff7167;
+  font-size: 30px;
+}
+
+.threshold-result.safe-result {
+  border-color: #386c58;
+  background: #17271f;
+}
+
+.threshold-result.safe-result strong {
+  color: #71c49d;
+}
+
+.calculation-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin: 12px 0;
+}
+
+.calculation-grid > div {
+  padding: 8px;
+  border-radius: 8px;
+  background: #101924;
+}
+
+.calculation-grid span,
+.calculation-grid b {
+  display: block;
+}
+
+.calculation-grid span {
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.calculation-grid b {
+  margin-top: 2px;
+  color: var(--gold);
+  font-size: 13px;
+}
+
+@media (max-width: 360px) {
+  .building {
+    margin: 1px;
+    border-width: 1px;
+  }
+
+  .building strong {
+    font-size: 7px;
+  }
+
+  .resource-row > div {
+    padding: 6px;
+  }
+}
