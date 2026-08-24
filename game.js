@@ -159,7 +159,7 @@ function reset(){
 
 function addLog(text){const li=document.createElement("li");li.textContent=text;$("log").prepend(li)}
 function toastLog(text){addLog(text)}
-function showModal(tag,title,body,button){$("modal-tag").textContent=tag;$("modal-title").textContent=title;$("modal-body").innerHTML=body;$("modal-close").textContent=button;$("modal").showModal()}
+function showModal(tag,title,body,button){const modal=$("modal");$("modal-tag").textContent=tag;$("modal-title").textContent=title;$("modal-body").innerHTML=body;$("modal-close").textContent=button;modal.showModal();modal.scrollTop=0}
 function showBackground(){showModal("世界背景 · 千禧年代老城区","又是星期日。挚友还活着。",BACKGROUND_BODY,"进入本轮周目")}
 
 document.querySelectorAll("[data-building]").forEach(button=>button.addEventListener("click",()=>selectBuilding(byType(button.dataset.building).id)));
