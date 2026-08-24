@@ -1,0 +1,11 @@
+# Local previews and editor files
+.docx-preview/
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak

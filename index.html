@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#101722">
+  <title>挚友的1000种死法｜Demo</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div>
+        <p>空间关系犯罪推演 Demo</p>
+        <h1>挚友的1000种死法</h1>
+      </div>
+      <button id="reset" class="ghost">重置地图</button>
+    </header>
+
+    <section class="stats" aria-label="城市属性">
+      <div><span>💰 经济</span><strong id="economy">-1</strong></div>
+      <div><span>🛡 治安</span><strong id="security">-2</strong></div>
+      <div><span>🌿 民生</span><strong id="livelihood">+4</strong></div>
+      <div><span>👥 人口</span><strong id="population">+4</strong></div>
+    </section>
+
+    <section class="map-card">
+      <div class="map-heading">
+        <div><span>8 × 8 城市网格</span><strong id="mode-hint">已选择：居民楼</strong></div>
+        <label class="switch"><input id="heat-toggle" type="checkbox" checked><span></span>犯罪热力</label>
+      </div>
+      <div class="axis-x"><i></i><b>0</b><b>1</b><b>2</b><b>3</b><b>4</b><b>5</b><b>6</b><b>7</b></div>
+      <div class="map-row">
+        <div class="axis-y"><b>0</b><b>1</b><b>2</b><b>3</b><b>4</b><b>5</b><b>6</b><b>7</b></div>
+        <div id="map" class="map">
+          <div id="cells" class="layer cells"></div>
+          <div id="heatmap" class="layer heatmap"></div>
+          <div id="influence" class="layer influence"></div>
+          <svg id="relation" viewBox="0 0 8 8" preserveAspectRatio="none" aria-hidden="true"><line id="relation-line"></line></svg>
+          <div id="building-layer" class="layer building-layer"></div>
+        </div>
+      </div>
+      <div class="legend"><span><i class="school-dot"></i>中学 5×5 影响区</span><span><i class="res-dot"></i>居民楼</span><span><i class="hot-dot"></i>犯罪热度</span></div>
+    </section>
+
+    <section class="control-card">
+      <div class="building-picker">
+        <button data-building="school"><span>🏫</span><strong>xx中学</strong><small>3×3 · 影响5×5</small></button>
+        <button data-building="residential" class="selected"><span>🏢</span><strong>居民楼1</strong><small>2×2 · 影响4×4</small></button>
+      </div>
+      <div class="relation-card">
+        <div><span>建筑最近距离</span><strong id="distance">6</strong></div>
+        <div><span>事件条件</span><strong>距离 ≥ 6</strong></div>
+        <div><span>热力峰值 / 阈值</span><strong><b id="peak">0</b> / 2</strong></div>
+        <p id="condition-text">当前布局将触发“求学路漫漫”。</p>
+      </div>
+      <button id="simulate" class="primary"><span>运行城市演算</span><small>判断事件 → 写入热力图 → 检测峰值</small></button>
+    </section>
+
+    <section class="log-card">
+      <h2>演算记录</h2>
+      <ol id="log"><li>系统就绪。请选择建筑并点击网格改变位置，或直接运行初始布局。</li></ol>
+    </section>
+  </main>
+
+  <dialog id="modal">
+    <div class="modal-card">
+      <p id="modal-tag"></p>
+      <h2 id="modal-title"></h2>
+      <div id="modal-body"></div>
+      <button id="modal-close">继续规划</button>
+    </div>
+  </dialog>
+  <script src="rules.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
