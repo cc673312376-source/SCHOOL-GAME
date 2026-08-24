@@ -1,0 +1,154 @@
+.topbar {
+  align-items: flex-start;
+}
+
+.header-actions {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 5px;
+}
+
+.header-actions .ghost {
+  padding: 7px 9px;
+  border-radius: 9px;
+  font-size: 10px;
+}
+
+.story-button {
+  border-color: #806c46;
+  color: #f2d490;
+}
+
+.loop-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+  margin: -2px 0 9px;
+}
+
+.loop-strip div {
+  padding: 7px 6px;
+  border: 1px solid #2c3b4c;
+  border-radius: 9px;
+  background: #101924;
+  text-align: center;
+}
+
+.loop-strip strong,
+.loop-strip span {
+  display: block;
+}
+
+.loop-strip strong {
+  color: var(--gold);
+  font-size: 9px;
+}
+
+.loop-strip span {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 7px;
+  white-space: nowrap;
+}
+
+dialog {
+  max-height: min(88dvh, 760px);
+  overflow: auto;
+}
+
+.modal-card #modal-body h3 {
+  margin: 18px 0 8px;
+  color: #f3dba7;
+  font-size: 13px;
+}
+
+.story-lead {
+  padding-left: 12px;
+  border-left: 3px solid var(--red);
+}
+
+.story-lead p:first-child {
+  margin-top: 0;
+}
+
+.modal-card blockquote {
+  margin: 14px 0;
+  padding: 12px 14px;
+  border: 1px solid #4d4050;
+  border-radius: 11px;
+  background: #211923;
+  color: #e8c6d4;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.story-cycle,
+.power-list {
+  display: grid;
+  gap: 6px;
+}
+
+.story-cycle div,
+.power-list div {
+  padding: 9px 11px;
+  border-radius: 9px;
+  background: #101924;
+}
+
+.story-cycle b,
+.story-cycle span,
+.power-list b,
+.power-list span {
+  display: block;
+}
+
+.story-cycle b,
+.power-list b {
+  color: var(--gold);
+  font-size: 11px;
+}
+
+.story-cycle span,
+.power-list span {
+  margin-top: 3px;
+  color: #b9c4cc;
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.demo-mission {
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid #775042;
+  border-radius: 11px;
+  background: #241b1c;
+}
+
+.demo-mission > b {
+  color: #f0c58e;
+  font-size: 11px;
+}
+
+.demo-mission p {
+  margin: 6px 0;
+}
+
+.demo-mission small {
+  color: #aeb7bf;
+  font-size: 9px;
+  line-height: 1.55;
+}
+
+#modal-close {
+  margin-top: 16px;
+}
+
+@media (max-width: 360px) {
+  .topbar p {
+    font-size: 8px;
+  }
+
+  .loop-strip span {
+    font-size: 6px;
+  }
+}

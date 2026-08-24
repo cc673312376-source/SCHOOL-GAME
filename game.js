@@ -1,5 +1,30 @@
 const DEMO_DATA=GameRules.DEMO_DATA;
 
+const BACKGROUND_BODY=`
+  <div class="story-lead">
+    <p>千禧年代，老居民楼、小卖部、中学、派出所和大排档挤在同一片城区里。你只是一个普通高中生——直到挚友在星期六死去。</p>
+    <p>强烈的情绪让你在下一个瞬间回到星期日。挚友还活着，城市也像什么都没有发生过；只有你记得那场惨剧。</p>
+  </div>
+  <blockquote>如果每一次案件里死的都是挚友……这不是爱是什么？但在第1000种死法出现以前，还是先把人救下来吧。</blockquote>
+  <h3>一周，就是一次推理</h3>
+  <div class="story-cycle">
+    <div><b>周日</b><span>带着案件和线索回到起点</span></div>
+    <div><b>周一—周五</b><span>观察特殊事件，推理建筑之间的隐藏规则</span></div>
+    <div><b>周六</b><span>城市结算；危险过高时，最终案件发生</span></div>
+  </div>
+  <h3>你改变的不是凶手，是城市</h3>
+  <p>学校是否离住宅太远？大排档是否离居民楼太近？派出所能否覆盖危险区域？你要从日历、小报、公告和居民口述中读出空间规律，再把城市调整成让惨剧没有机会发生的样子。</p>
+  <div class="power-list">
+    <div><b>星期日的轮回</b><span>惨剧发生后返回星期日，保留记忆、案件信息与线索。</span></div>
+    <div><b>乾坤挪移</b><span>消耗 1 点 SAN 移动一栋建筑；正式新手关计划为 SAN 3/3。</span></div>
+    <div><b>觉醒值</b><span>通过阻止案件、发现规律和推进剧情获得，用来解锁城区拓展、道路建设等能力。</span></div>
+  </div>
+  <div class="demo-mission">
+    <b>当前 Demo｜先验证第一条城市规律</b>
+    <p>xx中学与居民楼的初始距离为 6，会触发「求学路漫漫」。移动建筑、缩短距离并重新演算，让挚友今天平安到校。</p>
+    <small>本版暂不扣除 SAN；完整的五日观察、周六案件与线索收集将在后续版本接入。</small>
+  </div>`;
+
 const $=id=>document.getElementById(id);
 const state={
   buildings:structuredClone(DEMO_DATA.buildings),
@@ -135,12 +160,14 @@ function reset(){
 function addLog(text){const li=document.createElement("li");li.textContent=text;$("log").prepend(li)}
 function toastLog(text){addLog(text)}
 function showModal(tag,title,body,button){$("modal-tag").textContent=tag;$("modal-title").textContent=title;$("modal-body").innerHTML=body;$("modal-close").textContent=button;$("modal").showModal()}
+function showBackground(){showModal("世界背景 · 千禧年代老城区","又是星期日。挚友还活着。",BACKGROUND_BODY,"进入本轮周目")}
 
 document.querySelectorAll("[data-building]").forEach(button=>button.addEventListener("click",()=>selectBuilding(byType(button.dataset.building).id)));
 $("simulate").addEventListener("click",simulate);
+$("story").addEventListener("click",showBackground);
 $("reset").addEventListener("click",reset);
 $("heat-toggle").addEventListener("change",renderHeatmap);
 $("modal-close").addEventListener("click",()=>$("modal").close());
 
 renderCells();render();
-showModal("Demo 目标","改变空间，阻止死亡",`<p>学校在左上角，居民楼在右下角。两者占地边界的最近距离为 <b>6</b>，恰好会触发事件“求学路漫漫”。</p><p>先运行一次初始布局观察犯罪热力图；然后选中建筑并点击网格重新放置，让距离缩短到 6 以下。</p><ul><li>边方向每格距离 = 1</li><li>斜方向每格距离 = 1.5</li><li>热力峰值达到 2 时弹出事件</li></ul>`,`开始规划`);
+showBackground();

@@ -6,15 +6,19 @@
   <meta name="theme-color" content="#101722">
   <title>挚友的1000种死法｜Demo</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="story.css">
 </head>
 <body>
   <main class="app">
     <header class="topbar">
       <div>
-        <p>空间关系犯罪推演 Demo</p>
+        <p>千禧年代 · 老城区 · 时间轮回</p>
         <h1>挚友的1000种死法</h1>
       </div>
-      <button id="reset" class="ghost">重置地图</button>
+      <div class="header-actions">
+        <button id="story" class="ghost story-button">世界背景</button>
+        <button id="reset" class="ghost">重置地图</button>
+      </div>
     </header>
 
     <section class="stats" aria-label="城市属性">
@@ -24,9 +28,15 @@
       <div><span>👥 人口</span><strong id="population">+4</strong></div>
     </section>
 
+    <section class="loop-strip" aria-label="每轮时间流程">
+      <div><strong>周日</strong><span>带着记忆归来</span></div>
+      <div><strong>周一—周五</strong><span>观察与改变城市</span></div>
+      <div><strong>周六</strong><span>结算最终案件</span></div>
+    </section>
+
     <section class="map-card">
       <div class="map-heading">
-        <div><span>8 × 8 城市网格</span><strong id="mode-hint">已选择：居民楼</strong></div>
+        <div><span>老城区 · 8 × 8 城市网格</span><strong id="mode-hint">已选择：居民楼</strong></div>
         <label class="switch"><input id="heat-toggle" type="checkbox" checked><span></span>犯罪热力</label>
       </div>
       <div class="axis-x"><i></i><b>0</b><b>1</b><b>2</b><b>3</b><b>4</b><b>5</b><b>6</b><b>7</b></div>
@@ -63,7 +73,7 @@
     </section>
   </main>
 
-  <dialog id="modal">
+  <dialog id="modal" aria-labelledby="modal-title">
     <div class="modal-card">
       <p id="modal-tag"></p>
       <h2 id="modal-title"></h2>
