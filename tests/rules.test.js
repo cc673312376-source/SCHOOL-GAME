@@ -1,5 +1,5 @@
 const assert=require("node:assert/strict");
-const {DEMO_DATA,buildingDistance,coverageRect,evaluate,findTutorialSolutions,layoutIsValid}=require("../rules.js");
+const {DEMO_DATA,buildingDistance,coverageRect,influenceCells,evaluate,findTutorialSolutions,layoutIsValid}=require("../rules.js");
 
 const initial=structuredClone(DEMO_DATA.buildings);
 const initialResult=evaluate(initial);
@@ -14,6 +14,7 @@ assert.deepEqual(initialResult.distances,{
   diner_to_police:6
 },"初始布局的四条教学距离应匹配推算");
 assert.deepEqual(initialResult.events.map(event=>event.name),["求学路漫漫","无银光临","杀熟","醉酒斗殴"],"初始一周应依次触发四起特殊事件");
+assert.deepEqual(initialResult.events.map(event=>event.day),["周二","周三","周四","周五"],"事件应按周二至周五逐日出现，周一允许没有事件");
 assert.equal(initialResult.peak,14,"初始犯罪预值峰值应为14");
 assert.equal(initialResult.threshold,7,"最终案件阈值应为7，即整数预值高于6");
 assert.equal(initialResult.dangerous,true,"初始布局应触发最终案件");
@@ -63,6 +64,9 @@ home.position={x:3,y:0};
 assert.equal(buildingDistance(school,home),1,"边相接距离应为1");
 home.position={x:3,y:3};
 assert.equal(buildingDistance(school,home),1.5,"角相接距离应为1.5");
-assert.deepEqual(coverageRect(initial.find(item=>item.id==="police_01")),{x:2,y:0,width:6,height:6},"派出所6×6覆盖区应贴合地图边界");
+const initialPolice=initial.find(item=>item.id==="police_01");
+assert.deepEqual(coverageRect(initialPolice),{x:4,y:-2,width:6,height:6},"派出所影响区应保持同心并允许从地图上沿越界");
+assert.equal(influenceCells(initialPolice).length,15,"越界部分应被地图裁掉，不能平移到其他格子");
+assert.equal(influenceCells(initial.find(item=>item.id==="school_01")).length,15,"建筑影响格应按椭圆而不是矩形计算");
 
 console.log("All six-building tutorial rule tests passed.");

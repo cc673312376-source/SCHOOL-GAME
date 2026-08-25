@@ -60,21 +60,27 @@
   }
 
   function coverageRect(item){
-    const {width:mapWidth,height:mapHeight}=DEMO_DATA.map;
     const width=item.influence_area.width,height=item.influence_area.height;
     const centerX=item.position.x+(item.size.width-1)/2;
     const centerY=item.position.y+(item.size.height-1)/2;
-    let x=Math.round(centerX-(width-1)/2),y=Math.round(centerY-(height-1)/2);
-    x=Math.max(0,Math.min(mapWidth-width,x));
-    y=Math.max(0,Math.min(mapHeight-height,y));
-    return{x,y,width,height};
+    return{x:Math.round(centerX-(width-1)/2),y:Math.round(centerY-(height-1)/2),width,height};
+  }
+
+  function influenceCells(item){
+    const cells=[];
+    const centerX=item.position.x+item.size.width/2,centerY=item.position.y+item.size.height/2;
+    const radiusX=item.influence_area.width/2,radiusY=item.influence_area.height/2;
+    for(let y=0;y<DEMO_DATA.map.height;y++){
+      for(let x=0;x<DEMO_DATA.map.width;x++){
+        const dx=(x+.5-centerX)/radiusX,dy=(y+.5-centerY)/radiusY;
+        if(dx*dx+dy*dy<=1+Number.EPSILON)cells.push({x,y});
+      }
+    }
+    return cells;
   }
 
   function addToArea(heatmap,item,value){
-    const area=coverageRect(item);
-    for(let y=area.y;y<area.y+area.height;y++){
-      for(let x=area.x;x<area.x+area.width;x++)heatmap[y][x]+=value;
-    }
+    influenceCells(item).forEach(({x,y})=>{heatmap[y][x]+=value});
   }
 
   function sumAttributes(buildings){
@@ -170,5 +176,5 @@
     return solutions.sort((a,b)=>a.move_count-b.move_count||a.displacement-b.displacement);
   }
 
-  return{DEMO_DATA,buildingDistance,coverageRect,evaluate,findTutorialSolutions,layoutIsValid,rectsOverlap,touchesRoad};
+  return{DEMO_DATA,buildingDistance,coverageRect,influenceCells,evaluate,findTutorialSolutions,layoutIsValid,rectsOverlap,touchesRoad};
 });
